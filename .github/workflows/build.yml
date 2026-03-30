@@ -65,5 +65,5 @@ jobs:
               sonar-report.txt
           draft: false
           prerelease: false
-          env:
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
