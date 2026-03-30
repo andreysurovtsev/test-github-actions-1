@@ -24,3 +24,46 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@v2
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Generate Sonar Report
+        run: |
+            # Create a simple report
+            cat > sonar-report.txt << EOF
+            SonarQube Analysis Report
+            =========================
+            Repository: ${{ github.repository }}
+            Commit: ${{ github.sha }}
+            Date: $(date)
+            
+            Quality Gate Status: ${{ steps.sonar.outcome }}
+            
+            For detailed results visit:
+            https://sonarcloud.io/project/overview?id=${{ github.repository_owner }}_${{ github.event.repository.name }}
+            EOF
+
+      
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Release v1.0.${{ github.run_number }}
+          body: |
+              ## SonarCloud Analysis Results
+              
+              ✅ **Quality Gate:** ${{ steps.sonar.outcome }}
+              
+              📊 **Analysis Summary:**
+              - Run ID: ${{ github.run_id }}
+              - Commit: `${{ github.sha }}`
+              
+              🔗 **View Full Report:** [SonarCloud Dashboard](https://sonarcloud.io/project/overview?id=${{ github.repository_owner }}_${{ github.event.repository.name }})
+              
+              ### Changes in this release:
+              ${{ github.event.head_commit.message }}
+          files: |
+              sonar-report.txt
+          draft: false
+          prerelease: false
+          env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
